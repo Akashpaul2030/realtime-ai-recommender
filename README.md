@@ -2,7 +2,7 @@
 
 A production-ready system for real-time AI integration with e-commerce product data. This project provides vector similarity search, real-time product recommendations, and efficient data processing with low latency.
 
-![Architecture Diagram](https://github.com/Akashpaul2030/realtime-ai-recommender/raw/main/docs/architecture.png)
+![Architecture Diagram](https://github.com/Akashpaul2030/realtime-ai-recommender/blob/main/Diagram/architecture.PNG)
 
 ## ✨ Key Features
 
