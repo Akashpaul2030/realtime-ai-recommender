@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venvScriptsactivate)",
+      "Bash(source:*)",
+      "Bash(python:*)",
+      "Bash(timeout 5 python:*)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

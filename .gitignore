@@ -52,3 +52,10 @@ appendonly.aof
 *.swp
 *.swo
 .DS_Store
+
+# Documentation and settings
+*.md
+settings.json
+local.json
+config.local.json
+.vscode/settings.json
