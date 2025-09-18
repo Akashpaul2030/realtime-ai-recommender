@@ -26,15 +26,33 @@ class EmbeddingModel:
                 # Initialize the model
                 cls._instance.model = TfidfVectorizer(
                     max_features=VECTOR_DIMENSION,
-                    stop_words='english'
+                    stop_words='english',
+                    ngram_range=(1, 2),  # Include bigrams for richer vocabulary
+                    min_df=1,  # Include all terms
+                    max_df=0.95  # Exclude very common terms
                 )
-                # Pre-fit with some generic texts to establish vocabulary
+                # Pre-fit with expanded vocabulary to ensure 384 dimensions
                 sample_texts = [
-                    "product item goods purchase buy shop retail",
-                    "electronics technology devices gadgets computer phone",
-                    "clothing apparel fashion wear dress shirt pants",
-                    "furniture home decor interior design",
-                    "food grocery ingredients meal recipe"
+                    "product item goods merchandise purchase buy shop retail store market commerce trade",
+                    "electronics technology devices gadgets computer phone smartphone tablet laptop monitor",
+                    "clothing apparel fashion wear dress shirt pants jacket shoes accessories style",
+                    "furniture home decor interior design table chair sofa bed cabinet decoration",
+                    "food grocery ingredients meal recipe cooking kitchen utensils appliance dining",
+                    "books education learning literature novel textbook magazine newspaper publication",
+                    "sports fitness exercise equipment workout gym training athletic gear",
+                    "health beauty cosmetics skincare personal care hygiene wellness medical",
+                    "toys games entertainment hobby craft art supplies creative play fun",
+                    "automotive vehicle car truck motorcycle parts accessories maintenance repair",
+                    "garden outdoor nature plant flower tool landscape yard maintenance equipment",
+                    "music audio instrument sound speaker headphone entertainment media player",
+                    "jewelry accessories luxury watch ring necklace bracelet precious metal stone",
+                    "tools hardware construction building repair maintenance DIY equipment",
+                    "pet animal care food toy supplies grooming veterinary health",
+                    "baby child kids infant toddler maternity parenting family care safety",
+                    "office business professional work school supplies stationery organization",
+                    "travel luggage vacation holiday trip adventure outdoor camping hiking",
+                    "camera photography video recording equipment lens memory storage",
+                    "software application program digital technology internet online service"
                 ]
                 cls._instance.model.fit(sample_texts)
                 cls._instance.dimension = VECTOR_DIMENSION
@@ -51,11 +69,21 @@ class EmbeddingModel:
             # Generate sparse matrix and convert to dense
             sparse_embedding = self.model.transform([text])
             embedding = sparse_embedding.toarray()[0]
+
+            # Ensure embedding has exactly the required dimension
+            if len(embedding) < self.dimension:
+                # Pad with zeros if too short
+                padding = np.zeros(self.dimension - len(embedding))
+                embedding = np.concatenate([embedding, padding])
+            elif len(embedding) > self.dimension:
+                # Truncate if too long
+                embedding = embedding[:self.dimension]
+
             # Normalize the vector
             norm = np.linalg.norm(embedding)
             if norm > 0:
                 embedding = embedding / norm
-        
+
         logger.debug(f"Embedding generated in {time.time() - start_time:.4f} seconds")
         return embedding
     
@@ -82,14 +110,18 @@ class EmbeddingModel:
         """Generate embedding for a product by combining name, description, and category"""
         # Combine product fields into a single text representation
         product_text = f"{product.get('name', '')} {product.get('description', '')} Category: {product.get('category', '')}"
-        
+
         # Add important attributes if available
         if 'attributes' in product and product['attributes']:
             for key, value in product['attributes'].items():
                 if isinstance(value, (str, int, float)):
                     product_text += f" {key}: {value}"
-        
+
         return self.get_embedding(product_text)
+
+    def get_text_embedding(self, text: str) -> np.ndarray:
+        """Generate embedding for plain text (alias for get_embedding)"""
+        return self.get_embedding(text)
     
     @property
     def embedding_dimension(self) -> int:
