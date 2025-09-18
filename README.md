@@ -165,27 +165,3 @@ kubectl apply -f deployment/k8s/
 ### **One-Click Deploy**
 [![Deploy](https://img.shields.io/badge/Deploy-Railway-blueviolet)](https://railway.app/new/template)
 
-## 📊 **Performance Analysis**
-
-Run comprehensive benchmarks:
-```bash
-python performance_comparison.py  # Generate performance charts
-python -m notebooks.model_comparison  # A/B test different models
-```
-
-## 🤝 **Contributing**
-
-This project demonstrates production-ready AI/ML capabilities. Feel free to:
-- **Fork** and extend with your own features
-- **Submit** issues for discussion
-- **Star** if it helps showcase AI/ML skills
-
-## 📜 **License**
-
-MIT License - Free for portfolio and commercial use.
-
----
-
-**🌟 This project demonstrates senior-level AI/ML engineering skills suitable for production environments.**
-
-**📧 Contact**: [Your Email] | **💼 LinkedIn**: [Your Profile] | **🌐 Portfolio**: [Your Website]
