@@ -1,4 +1,4 @@
-# Python bytecode
+﻿# Python bytecode
 __pycache__/
 *.py[cod]
 *$py.class
@@ -16,7 +16,11 @@ venv/
 venv_new/
 env/
 ENV/
+.venv/
 .env
+
+# Package managers
+node_modules/
 
 # Distribution / packaging
 dist/
@@ -29,6 +33,9 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 nosetests.xml
 coverage.xml
 *.cover
@@ -61,7 +68,11 @@ appendonly.aof
 
 # Documentation and settings
 *claude.md
+.claude/
 settings.json
 local.json
 config.local.json
 .vscode/settings.json
+
+# Windows device artifacts
+nul
