@@ -67,3 +67,45 @@ DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() == "true"
 
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+
+class Config:
+    """Configuration class for easy access to settings."""
+
+    def __init__(self):
+        # Load environment variables
+        load_dotenv()
+
+        # Backend configuration
+        self.BACKEND_TYPE = os.getenv("BACKEND_TYPE", "redis")
+        self.VECTOR_STORE_TYPE = os.getenv("VECTOR_STORE_TYPE", "redis")
+        self.EVENT_PROCESSOR_TYPE = os.getenv("EVENT_PROCESSOR_TYPE", "redis")
+        self.DATA_STORE_TYPE = os.getenv("DATA_STORE_TYPE", "redis")
+
+        # Redis configuration
+        self.REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+        self.REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+        self.REDIS_DB = int(os.getenv("REDIS_DB", 0))
+        self.REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", None)
+
+        # API configuration
+        self.API_HOST = os.getenv("API_HOST", "0.0.0.0")
+        self.API_PORT = int(os.getenv("API_PORT", 8000))
+
+        # Vector configuration
+        self.VECTOR_DIMENSIONS = int(os.getenv("VECTOR_DIMENSION", 384))
+        self.SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", 0.75))
+
+        # Model configuration
+        self.EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "all-MiniLM-L6-v2")
+        self.MODEL_CACHE_DIR = os.getenv("MODEL_CACHE_DIR", "./model_cache")
+
+        # Logging
+        self.LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+        self.DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() == "true"
+
+    def get_redis_url(self) -> str:
+        """Get Redis connection URL."""
+        if self.REDIS_PASSWORD:
+            return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"

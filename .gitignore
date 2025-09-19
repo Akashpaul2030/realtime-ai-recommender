@@ -6,7 +6,6 @@ __pycache__/
 .Python
 
 # Temporary and test files
-test_*.py
 setup_*.py
 *_temp.py
 *.tmp
