@@ -73,5 +73,11 @@ local.json
 config.local.json
 .vscode/settings.json
 
+# Project documentation files
+AGENTS.md
+DEMO_GUIDE.md
+*_GUIDE.md
+INTEGRATION_GUIDE.md
+
 # Windows device artifacts
 nul
