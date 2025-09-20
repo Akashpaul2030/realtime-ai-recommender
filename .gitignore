@@ -79,5 +79,15 @@ DEMO_GUIDE.md
 *_GUIDE.md
 INTEGRATION_GUIDE.md
 
+# Demo and test artifacts
+demo_*.py
+*demo*.py
+test_*.py
+*_test.py
+playwright_*.py
+streamlit_*.py
+demos/
+gradio_*.py
+
 # Windows device artifacts
 nul
