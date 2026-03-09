@@ -148,17 +148,121 @@ async def search_recommendations(
             query_text=query,
             limit=limit
         )
-        
+
         # Create response
         response = RecommendationResponse(
             recommendations=recommendations
         )
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Error searching for recommendations: {e}")
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail=f"Failed to search for recommendations: {str(e)}"
+        )
+
+
+@router.get("/hybrid-search")
+async def hybrid_search(
+    query: str = Query(..., description="Text query for hybrid search"),
+    limit: int = Query(10, description="Maximum number of results"),
+    alpha: float = Query(0.05, description="Balance: 0=keyword only, 1=semantic only"),
+    user_id: Optional[str] = Header(None, description="User ID for tracking")
+):
+    """Hybrid search using BM25 (keyword) + MiniLM (semantic) via Pinecone"""
+    try:
+        from services.hybrid_search import get_hybrid_search
+        service = get_hybrid_search()
+
+        results = service.hybrid_search(query=query, alpha=alpha, top_k=limit)
+
+        return {
+            "query": query,
+            "alpha": alpha,
+            "results": results,
+            "count": len(results)
+        }
+
+    except Exception as e:
+        logger.error(f"Error in hybrid search: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Hybrid search failed: {str(e)}"
+        )
+
+
+@router.get("/hybrid-similar/{product_id}")
+async def hybrid_similar(
+    product_id: str = Path(..., description="Product ID to find similar products for"),
+    limit: int = Query(6, description="Maximum number of results"),
+    user_id: Optional[str] = Header(None, description="User ID for tracking")
+):
+    """Find similar products using hybrid search via Pinecone"""
+    try:
+        from services.hybrid_search import get_hybrid_search
+        service = get_hybrid_search()
+
+        # Get the product's metadata from Pinecone to build query text
+        index = service.index
+        fetch_result = index.fetch(ids=[product_id])
+
+        if product_id not in fetch_result.vectors:
+            raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
+
+        metadata = fetch_result.vectors[product_id].metadata
+        query_text = f"{metadata.get('name', '')} {metadata.get('category', '')} {metadata.get('articleType', '')} {metadata.get('baseColour', '')}"
+
+        # Track view
+        if user_id:
+            product_recommender.track_product_view(user_id, product_id)
+
+        results = service.hybrid_search(query=query_text, alpha=0.3, top_k=limit + 1)
+
+        # Filter out the source product
+        results = [r for r in results if r["product_id"] != product_id][:limit]
+
+        return {
+            "product_id": product_id,
+            "results": results,
+            "count": len(results)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in hybrid similar: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Hybrid similar search failed: {str(e)}"
+        )
+
+
+@router.get("/hybrid-product/{product_id}")
+async def get_hybrid_product(
+    product_id: str = Path(..., description="Product ID to get details for")
+):
+    """Get product details from Pinecone metadata"""
+    try:
+        from services.hybrid_search import get_hybrid_search
+        service = get_hybrid_search()
+
+        fetch_result = service.index.fetch(ids=[product_id])
+
+        if product_id not in fetch_result.vectors:
+            raise HTTPException(status_code=404, detail=f"Product {product_id} not found")
+
+        metadata = dict(fetch_result.vectors[product_id].metadata)
+        metadata["id"] = product_id
+
+        return {"product": metadata}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching hybrid product: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get product: {str(e)}"
         )

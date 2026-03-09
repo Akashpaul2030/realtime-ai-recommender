@@ -100,12 +100,14 @@ class RedisVectorStore:
         
         start_time = time.time()
         try:
-            # Perform the vector search
+            # Perform the vector search (DIALECT 2 required for KNN syntax)
             results = self.redis.execute_command(
                 "FT.SEARCH", VECTOR_INDEX_NAME,
                 f"*=>[KNN {limit} @vector $query_vector AS score]",
                 "PARAMS", 2, "query_vector", query_vector,
-                "SORTBY", "score", "RETURN", 4, "id", "score", "category", "updated_at"
+                "SORTBY", "score",
+                "RETURN", 4, "score", "category", "name", "updated_at",
+                "DIALECT", 2
             )
             
             # Process results
@@ -127,8 +129,10 @@ class RedisVectorStore:
                         if j+1 < len(properties):
                             prop_name = properties[j].decode('utf-8')
                             if prop_name == 'score':
-                                # Convert similarity score (1 is best, 0 is worst)
-                                similarity_score = float(properties[j+1])
+                                # Redis returns cosine distance (0=identical, 2=opposite)
+                                # Convert to similarity (1=identical, 0=opposite)
+                                raw_score = float(properties[j+1])
+                                similarity_score = 1.0 - raw_score
                             elif prop_name == 'category':
                                 category = properties[j+1].decode('utf-8')
                             elif prop_name == 'updated_at':
