@@ -13,7 +13,7 @@ import uvicorn
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import API_HOST, API_PORT, DEBUG_MODE
-from api.routes import products, recommendations
+from api.routes import products, recommendations, analytics, homepage
 from api.middleware.logging import LoggingMiddleware
 
 
@@ -40,6 +40,8 @@ app = FastAPI(
 # Include routers
 app.include_router(products.router, prefix="/products", tags=["products"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["recommendations"])
+app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+app.include_router(homepage.router, prefix="/homepage", tags=["homepage"])
 
 
 @app.get("/health")

@@ -178,6 +178,26 @@ async def hybrid_search(
 
         results = service.hybrid_search(query=query, alpha=alpha, top_k=limit)
 
+        # Track search for analytics
+        try:
+            from services.search_tracker import get_search_tracker
+            tracker = get_search_tracker()
+            tracker.track_search(
+                user_id=user_id or "anonymous",
+                query=query,
+                result_count=len(results),
+            )
+            # Track categories from results
+            categories = []
+            for r in results:
+                cat = (r.get("metadata") or {}).get("category")
+                if cat:
+                    categories.append(cat)
+            if categories:
+                tracker.track_search_categories(categories)
+        except Exception as track_err:
+            logger.warning(f"Search tracking failed (non-fatal): {track_err}")
+
         return {
             "query": query,
             "alpha": alpha,
