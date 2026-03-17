@@ -257,7 +257,7 @@ input{font-family:inherit}
   // --- API helpers ---
   async function api(path, options = {}) {
     const headers = options.headers || {};
-    if (state.userId) headers['user_id'] = state.userId;
+    if (state.userId) headers['user-id'] = state.userId;
     const res = await fetch(path, { ...options, headers });
     if (!res.ok) throw new Error('API ' + res.status);
     return res.json();
@@ -401,9 +401,13 @@ input{font-family:inherit}
           '</div>';
         }).join('') +
       '</div>' +
+      '<div id="homepageRecs"></div>' +
     '</div>';
 
     app.innerHTML = html;
+
+    // Load personalized recommendations
+    loadHomepageRecommendations();
 
     var heroSearch = document.getElementById('heroSearch');
     if (heroSearch) {
@@ -414,6 +418,52 @@ input{font-family:inherit}
           window.location.hash = '#search/' + encodeURIComponent(state.searchQuery);
         }
       });
+    }
+  }
+
+  // HOMEPAGE RECOMMENDATIONS
+  async function loadHomepageRecommendations() {
+    var container = document.getElementById('homepageRecs');
+    if (!container) return;
+
+    container.innerHTML = '<div style="margin-top:32px">' +
+      '<div class="section-title">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
+        '<span id="recsLabel">Recommended</span>' +
+      '</div>' +
+      spinnerHTML() +
+    '</div>';
+
+    try {
+      var data = await api('/homepage/recommendations?limit=5');
+      var results = data.results || [];
+      var source = data.source || 'fallback';
+
+      var labelEl = document.getElementById('recsLabel');
+      if (labelEl) {
+        labelEl.textContent = source === 'personalized' ? 'Picked for You' : 'Trending Now';
+      }
+
+      if (results.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      var cards = results.map(function(r) {
+        var product = productFromHybridResult(r);
+        productCache[product.id] = product;
+        return productCardHTML(product, r.score);
+      }).join('');
+
+      container.innerHTML = '<div style="margin-top:32px">' +
+        '<div class="section-title">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' +
+          (source === 'personalized' ? 'Picked for You' : 'Trending Now') +
+        '</div>' +
+        '<div class="product-grid">' + cards + '</div>' +
+      '</div>';
+    } catch (err) {
+      container.innerHTML = '';
     }
   }
 
